@@ -43,6 +43,7 @@ class Fuzzer:
         self.inp_que = []
         self.num=0
         self.generation={}
+        self.len_g=0x400
     def get_cov(self,source):
         #TODO not total cov, only branch cov
         #TODO qemu mode (black box)
@@ -54,8 +55,8 @@ class Fuzzer:
         
         #print(data)
         #exit(1)
-        st = b"Lines executed:"
-        #st = "Branches executed:"
+        #st = b"Lines executed:"
+        st = b"Branches executed:"
         idx = data.index(st)+len(st)
         data = data[idx:idx+3]
         #print(data)
@@ -122,7 +123,7 @@ class Fuzzer:
                 #gen self.inp_que
                 tmp = self.num
                 for ge in self.generation:
-                    for _ in range(int(0x100/len(self.generation))):
+                    for _ in range(int(self.len_g/len(self.generation))):
                         fd2 = open(ge)
                         data = fd2.read()
                         fd2.close()
@@ -131,7 +132,7 @@ class Fuzzer:
                         fd.close()
                         self.inp_que.append("/tmp/fuzzer_inp%d"%tmp)
                         tmp+=1
-                for _ in range(0x100 - len(self.inp_que)):
+                for _ in range(self.len_g - len(self.inp_que)):
                     self.inp_que.append("/tmp/fuzzer_inp%d"%tmp)
                     fd = open("/tmp/fuzzer_inp%d"%tmp,"w")
                     print(self.generation.keys())
@@ -155,9 +156,10 @@ class Fuzzer:
                 #select top 10 cov, and set top 10 new seed
                 next_g={}
                 #print(self.generation.values())
+                print("coverage = %f"%(sum(self.generation.values())/len(self.generation.values())))
                 selects = list(self.generation.values())[0:]
                 selects.sort(reverse=True)
-                unselects = selects[0x10:]
+                unselects = selects[int(self.len_g/0x10):]
 
                 for unselect in unselects:
                     idx = list(self.generation.values()).index(unselect)
